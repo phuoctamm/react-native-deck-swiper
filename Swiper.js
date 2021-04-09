@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { PanResponder, Text, View, Dimensions, Animated } from 'react-native'
 import PropTypes from 'prop-types'
 import isEqual from 'lodash/isEqual'
-import ViewOverflow from 'react-native-view-overflow'
+// import ViewOverflow from 'react-native-view-overflow'
 
 import styles from './styles'
 
@@ -93,13 +93,13 @@ class Swiper extends Component {
     const {
       cardVerticalMargin,
       cardHorizontalMargin,
-      marginTop,
+      // marginTop,
       marginBottom
     } = this.props
 
     const cardWidth = width - cardHorizontalMargin * 2
     const cardHeight =
-      height - cardVerticalMargin * 2 - marginTop - marginBottom
+      height - cardVerticalMargin * 2 - marginBottom
 
     return {
       top: cardVerticalMargin,
@@ -195,7 +195,7 @@ class Swiper extends Component {
       })
     }
 
-    return Animated.event([null, this.createAnimatedEvent()])(
+    return Animated.event([null, this.createAnimatedEvent()], { useNativeDriver: false })(
       event,
       gestureState
     )
@@ -344,7 +344,8 @@ class Swiper extends Component {
     Animated.spring(this.state.pan, {
       toValue: 0,
       friction: this.props.topCardResetAnimationFriction,
-      tension: this.props.topCardResetAnimationTension
+      tension: this.props.topCardResetAnimationTension,
+      useNativeDriver: true,
     }).start(cb)
 
     this.state.pan.setOffset({
@@ -416,7 +417,8 @@ class Swiper extends Component {
         x: x * SWIPE_MULTIPLY_FACTOR,
         y: y * SWIPE_MULTIPLY_FACTOR
       },
-      duration: this.props.swipeAnimationDuration
+      duration: this.props.swipeAnimationDuration,
+      useNativeDriver: true,
     }).start(() => {
       this.setSwipeBackCardXY(x, y, () => {
         mustDecrementCardIndex = mustDecrementCardIndex
@@ -605,9 +607,10 @@ class Swiper extends Component {
       ? this.interpolateCardOpacity()
       : 1
     const rotation = this.interpolateRotation()
-
+    const { marginTop } = this.props;
     return [
       styles.card,
+      {marginTop},
       this.getCardStyle(),
       {
         zIndex: 1,
@@ -616,7 +619,7 @@ class Swiper extends Component {
           { translateX: this.state.pan.x },
           { translateY: this.state.pan.y },
           { rotate: rotation }
-        ]
+        ],
       },
       this.props.cardStyle
     ]
@@ -624,6 +627,7 @@ class Swiper extends Component {
 
   calculateStackCardZoomStyle = (position) => [
     styles.card,
+    {marginTop: this.props.marginTop},
     this.getCardStyle(),
     {
       zIndex: position * -1,
@@ -692,8 +696,8 @@ class Swiper extends Component {
     })
 
   render = () => {
-    const { pointerEvents, backgroundColor, marginTop, marginBottom, containerStyle, swipeBackCard, useViewOverflow } = this.props
-    const ViewComponent = useViewOverflow ? ViewOverflow : View
+    const { pointerEvents, backgroundColor, marginBottom, containerStyle, swipeBackCard, useViewOverflow, renderHeader } = this.props
+    const ViewComponent = View
     return (
       <ViewComponent
         pointerEvents={pointerEvents}
@@ -701,12 +705,12 @@ class Swiper extends Component {
           styles.container,
           {
             backgroundColor: backgroundColor,
-            marginTop: marginTop,
             marginBottom: marginBottom
           },
           containerStyle
         ]}
       >
+        {renderHeader && renderHeader}
         {this.renderChildren()}
         {swipeBackCard ? this.renderSwipeBackCard() : null}
         {this.renderStack()}
@@ -916,7 +920,8 @@ Swiper.propTypes = {
   verticalSwipe: PropTypes.bool,
   verticalThreshold: PropTypes.number,
   zoomAnimationDuration: PropTypes.number,
-  zoomFriction: PropTypes.number
+  zoomFriction: PropTypes.number,
+  renderHeader: PropTypes.any,
 }
 
 Swiper.defaultProps = {
